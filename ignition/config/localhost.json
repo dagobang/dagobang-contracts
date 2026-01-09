@@ -1,0 +1,10 @@
+{
+    "DagobangRouter": {
+        "wNative": "",
+        "v3Factory": ""
+    },
+    "DagobangProxy": {
+        "proxyAddress": "",
+        "upgradeCallData": "0x"
+    }
+}

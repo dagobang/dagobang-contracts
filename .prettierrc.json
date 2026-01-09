@@ -1,0 +1,17 @@
+{
+    "printWidth": 160,
+    "overrides": [
+        {
+            "files": "*.sol",
+            "options": {
+                "printWidth": 180,
+                "tabWidth": 4,
+                "useTabs": false,
+                "singleQuote": false,
+                "bracketSpacing": false,
+                "explicitTypes": "preserve",
+                "parser": "solidity-parse"
+            }
+        }
+    ]
+}
