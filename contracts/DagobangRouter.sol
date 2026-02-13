@@ -240,6 +240,12 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         uint256 balance = IERC20(tokenIn).balanceOf(payerOrigin);
         uint256 amountIn = (balance * percentBps) / FEE_DENOMINATOR;
+        if (percentBps != FEE_DENOMINATOR && amountIn > 0 && descs[0].swapType == SwapType.FOUR_MEME_SELL) {
+            bool isV2 = _fourMemeIsV2(descs[0].poolAddress, tokenIn);
+            if (isV2) {
+                amountIn = (amountIn / 1e9) * 1e9;
+            }
+        }
         require(amountIn > 0, "ZERO_INPUT");
 
         SwapDesc calldata lastDesc = descs[descs.length - 1];
