@@ -203,17 +203,17 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         if (lastDesc.swapType == SwapType.FOUR_MEME_BUY_AMAP) {
             require(!_isNative(tokenOut), "FOUR_MEME_NATIVE_OUT");
-            require(currentAmountIn >= minReturn, "MIN_RETURN_NOT_REACHED");
+            require(currentAmountIn >= minReturn, "MIN_RETURN");
         } else {
             if (_isNative(tokenOut)) {
                 IWNative(wNative).withdraw(currentAmountIn);
                 fee = _takeNativeFee(payerOrigin, currentAmountIn);
                 uint256 netOut = currentAmountIn - fee;
-                require(netOut >= minReturn, "MIN_RETURN_NOT_REACHED");
+                require(netOut >= minReturn, "MIN_RETURN");
                 (bool ok, ) = payerOrigin.call{value: netOut}("");
                 require(ok, "NATIVE_TRANSFER_FAILED");
             } else {
-                require(currentAmountIn >= minReturn, "MIN_RETURN_NOT_REACHED");
+                require(currentAmountIn >= minReturn, "MIN_RETURN");
                 IERC20(tokenOut).safeTransfer(payerOrigin, currentAmountIn);
             }
         }
@@ -273,17 +273,17 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         if (lastDesc.swapType == SwapType.FOUR_MEME_BUY_AMAP) {
             require(!_isNative(tokenOut), "FOUR_MEME_NATIVE_OUT");
-            require(currentAmountIn >= minReturn, "MIN_RETURN_NOT_REACHED");
+            require(currentAmountIn >= minReturn, "MIN_RETURN");
         } else {
             if (_isNative(tokenOut)) {
                 IWNative(wNative).withdraw(currentAmountIn);
                 uint256 fee = _takeNativeFee(payerOrigin, currentAmountIn);
                 uint256 netOut = currentAmountIn - fee;
-                require(netOut >= minReturn, "MIN_RETURN_NOT_REACHED");
+                require(netOut >= minReturn, "MIN_RETURN");
                 (bool ok, ) = payerOrigin.call{value: netOut}("");
                 require(ok, "NATIVE_TRANSFER_FAILED");
             } else {
-                require(currentAmountIn >= minReturn, "MIN_RETURN_NOT_REACHED");
+                require(currentAmountIn >= minReturn, "MIN_RETURN");
                 IERC20(tokenOut).safeTransfer(payerOrigin, currentAmountIn);
             }
         }
@@ -295,6 +295,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         SwapDesc calldata desc = descs[i];
 
         if (desc.swapType == SwapType.V3_EXACT_IN) {
+            require(amountIn > 0, "ZERO_INPUT");
             address tokenIn = _wrapToken(desc.tokenIn);
             address tokenOut = _wrapToken(desc.tokenOut);
             if (desc.tokenIn == address(0)) {
@@ -305,6 +306,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         if (desc.swapType == SwapType.V2_EXACT_IN) {
+            require(amountIn > 0, "ZERO_INPUT");
             address tokenIn = _wrapToken(desc.tokenIn);
             address tokenOut = _wrapToken(desc.tokenOut);
             if (desc.tokenIn == address(0)) {
@@ -347,6 +349,9 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
                 amountOut = FourMemeSwapLib.sellToNativeWrapped(desc.poolAddress, wNative, desc.tokenIn, amountIn, minFunds, payerOrigin, isV2);
             } else {
                 amountOut = FourMemeSwapLib.sellToToken(desc.poolAddress, desc.tokenIn, desc.tokenOut, amountIn, minFunds, payerOrigin, isV2);
+                if (i + 1 < descs.length) {
+                    IERC20(desc.tokenOut).safeTransferFrom(payerOrigin, address(this), amountOut);
+                }
             }
             return amountOut;
         }

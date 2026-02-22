@@ -10,10 +10,12 @@ import {IWNative} from "../interfaces/IWNative.sol";
 library FourMemeSwapLib {
     using SafeERC20 for IERC20;
 
+    // bytes4(keccak256("sellToken(uint256,address,address,uint256,uint256,uint256,address)"));
+    bytes4 private constant SEL_V2_SELL_FROM = 0xe63aaf36;
+
     function _sell(address tokenManager, address tokenIn, uint256 amountIn, uint256 minFunds, address payerOrigin, bool isV2, address feeRecipient) internal returns (bool ok) {
         if (isV2) {
-            bytes4 sel = bytes4(keccak256("sellToken(uint256,address,address,uint256,uint256,uint256,address)"));
-            (ok, ) = tokenManager.call(abi.encodeWithSelector(sel, uint256(0), tokenIn, payerOrigin, amountIn, minFunds, uint256(0), feeRecipient));
+            (ok, ) = tokenManager.call(abi.encodeWithSelector(SEL_V2_SELL_FROM, uint256(0), tokenIn, payerOrigin, amountIn, minFunds, uint256(0), feeRecipient));
             return ok;
         }
 
@@ -40,15 +42,15 @@ library FourMemeSwapLib {
                     IFourTokenManager(tokenManager).buyTokenAMAP{value: amountIn}(tokenOut, payerOrigin, amountIn, minOut);
                 }
             } else {
-                require(isAmap, "FOUR_V1_AMAP");
+                require(isAmap, "FVA");
                 IFourTokenManager(tokenManager).purchaseTokenAMAP{value: amountIn}(0, tokenOut, address(this), (amountIn * 99) / 100, minOut);
             }
             if (address(this).balance > 0) {
                 (bool refundOk, ) = payerOrigin.call{value: address(this).balance}("");
-                require(refundOk, "FOUR_REFUND_NATIVE");
+                require(refundOk, "FRN");
             }
         } else {
-            require(isAmap, "FOUR_TOKENIN_AMAP");
+            require(isAmap, "FTA");
             uint256 balanceBefore = IERC20(tokenIn).balanceOf(address(this)) - amountIn;
             IERC20(tokenIn).forceApprove(tokenManager, amountIn);
             IFourTokenManager(tokenManager).buyTokenAMAP(tokenOut, payerOrigin, amountIn, minOut);
@@ -80,8 +82,8 @@ library FourMemeSwapLib {
         bool isV2
     ) internal returns (uint256 amountOutWNative) {
         uint256 nativeBefore = address(this).balance;
-        bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, payerOrigin);
-        require(ok, "FOUR_SELL_V2");
+        bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, address(this));
+        require(ok, "FS2");
         uint256 nativeAfter = address(this).balance;
 
         uint256 nativeOut = nativeAfter - nativeBefore;
@@ -98,12 +100,12 @@ library FourMemeSwapLib {
         address payerOrigin,
         bool isV2
     ) internal returns (uint256 amountOut) {
-        uint256 beforeBal = IERC20(tokenOut).balanceOf(address(this));
+        uint256 beforeRecipient = IERC20(tokenOut).balanceOf(payerOrigin);
 
         bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, address(this));
-        require(ok, "FOUR_SELL_V2_FROM");
+        require(ok, "FS2");
 
-        uint256 afterBal = IERC20(tokenOut).balanceOf(address(this));
-        amountOut = afterBal - beforeBal;
+        uint256 afterRecipient = IERC20(tokenOut).balanceOf(payerOrigin);
+        amountOut = afterRecipient - beforeRecipient;
     }
 }
