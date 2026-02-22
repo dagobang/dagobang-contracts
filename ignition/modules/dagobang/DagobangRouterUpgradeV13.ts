@@ -2,7 +2,7 @@ import { getSelectedNetwork } from "@/utils/network.js";
 import { getDeploymentArgs } from "@/utils/readDeployment.js";
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const DagobangRouterUpgradeV12Module = buildModule("DagobangRouterUpgradeV12Module", (m) => {
+const DagobangRouterUpgradeV13Module = buildModule("DagobangRouterUpgradeV13Module", (m) => {
   const network = getSelectedNetwork();
 
   const args = getDeploymentArgs(network).DagobangProxy;
@@ -14,7 +14,7 @@ const DagobangRouterUpgradeV12Module = buildModule("DagobangRouterUpgradeV12Modu
 
   m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {
     after: [routerImplementation],
-    id: "DagobangRouterProxy_upgradeToAndCall_V12",
+    id: "DagobangRouterProxy_upgradeToAndCall_V13",
   });
 
   return {
@@ -23,5 +23,5 @@ const DagobangRouterUpgradeV12Module = buildModule("DagobangRouterUpgradeV12Modu
   };
 });
 
-export default DagobangRouterUpgradeV12Module;
+export default DagobangRouterUpgradeV13Module;
 

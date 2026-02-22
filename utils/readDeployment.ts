@@ -36,7 +36,7 @@ export function getDeploymentAddresses(chainId: string) {
 
   const dagobangRouterProxy = data["DagobangRouterDeployModule#DagobangRouterProxy"];
   const dagobangRouterImplementation = data["DagobangRouterDeployModule#DagobangRouter"];
-  const dagobangUpgradableRouter = data["DagobangRouterUpgradeV12Module#DagobangRouter"];
+  const dagobangUpgradableRouter = data["DagobangRouterUpgradeV13Module#DagobangRouter"];
 
   return {
     MockUSDT: data["MocksModule#MockUSDT"],

@@ -41,6 +41,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     address public pancakeInfinityVault;
     address public pancakeInfinityClPoolManager;
     address public pancakeInfinityBinPoolManager;
+    uint256 public feeThreshold;
 
     event FeeCollectorUpdated(address indexed feeCollector);
     event FeeBpsUpdated(uint16 feeBps);
@@ -161,6 +162,10 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     function setFeeExempt(address account, bool isExempt) external onlyOwner {
         feeExempt[account] = isExempt;
         emit FeeExemptUpdated(account, isExempt);
+    }
+
+    function setFeeThreshold(uint256 fee_) external onlyOwner {
+        feeThreshold = fee_;
     }
 
     function swap(
@@ -465,6 +470,11 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
     function _takeNativeFee(address payer, uint256 amount) internal returns (uint256 fee) {
         if (feeBps == 0 || feeExempt[payer]) {
+            return 0;
+        }
+
+        uint256 threshold = feeThreshold;
+        if (amount < threshold) {
             return 0;
         }
 
