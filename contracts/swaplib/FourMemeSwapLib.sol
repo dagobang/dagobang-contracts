@@ -10,10 +10,19 @@ import {IWNative} from "../interfaces/IWNative.sol";
 library FourMemeSwapLib {
     using SafeERC20 for IERC20;
 
-    function buy(address tokenManager, address tokenIn, address tokenOut, uint256 amountIn, bytes calldata data, address payerOrigin)
-        internal
-        returns (uint256 amountOut)
-    {
+    function _sell(address tokenManager, address tokenIn, uint256 amountIn, uint256 minFunds, address payerOrigin, bool isV2, address feeRecipient) internal returns (bool ok) {
+        if (isV2) {
+            bytes4 sel = bytes4(keccak256("sellToken(uint256,address,address,uint256,uint256,uint256,address)"));
+            (ok, ) = tokenManager.call(abi.encodeWithSelector(sel, uint256(0), tokenIn, payerOrigin, amountIn, minFunds, uint256(0), feeRecipient));
+            return ok;
+        }
+
+        IERC20(tokenIn).forceApprove(tokenManager, amountIn);
+        IFourTokenManager(tokenManager).saleToken(tokenIn, amountIn);
+        return true;
+    }
+
+    function buy(address tokenManager, address tokenIn, address tokenOut, uint256 amountIn, bytes calldata data, address payerOrigin) internal returns (uint256 amountOut) {
         bool isAmap = data.length == 0 || data.length == 32;
         uint256 minOut = data.length == 32 ? abi.decode(data, (uint256)) : 0;
         uint256 tokenOutBeforeRouter = IERC20(tokenOut).balanceOf(address(this));
@@ -23,7 +32,8 @@ library FourMemeSwapLib {
             (bool ok, bytes memory ret) = tokenManager.staticcall(abi.encodeWithSelector(IFourTokenManager._tokenInfos.selector, tokenOut));
             if (ok && ret.length > 0) {
                 IFourTokenManager.TokenInfo memory info = abi.decode(ret, (IFourTokenManager.TokenInfo));
-                if (info.template & 0x10000 > 0) { // X-Mode
+                if (info.template & 0x10000 > 0) {
+                    // X-Mode
                     bytes memory args = abi.encode(uint256(0), tokenOut, payerOrigin, uint256(0), uint256(0), amountIn, minOut);
                     IFourTokenManager(tokenManager).buyToken{value: amountIn}(args, 0, bytes("0x"));
                 } else {
@@ -34,7 +44,7 @@ library FourMemeSwapLib {
                 IFourTokenManager(tokenManager).purchaseTokenAMAP{value: amountIn}(0, tokenOut, address(this), (amountIn * 99) / 100, minOut);
             }
             if (address(this).balance > 0) {
-                (bool refundOk,) = payerOrigin.call{value: address(this).balance}("");
+                (bool refundOk, ) = payerOrigin.call{value: address(this).balance}("");
                 require(refundOk, "FOUR_REFUND_NATIVE");
             }
         } else {
@@ -70,18 +80,30 @@ library FourMemeSwapLib {
         bool isV2
     ) internal returns (uint256 amountOutWNative) {
         uint256 nativeBefore = address(this).balance;
-        if (isV2) {
-            bytes4 sel = bytes4(keccak256("sellToken(uint256,address,address,uint256,uint256,uint256,address)"));
-            (bool ok,) = tokenManager.call(abi.encodeWithSelector(sel, uint256(0), tokenIn, payerOrigin, amountIn, minFunds, uint256(0), payerOrigin));
-            require(ok, "FOUR_SELL_V2");
-        } else {
-            IERC20(tokenIn).forceApprove(tokenManager, amountIn);
-            IFourTokenManager(tokenManager).saleToken(tokenIn, amountIn);
-        }
+        bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, payerOrigin);
+        require(ok, "FOUR_SELL_V2");
         uint256 nativeAfter = address(this).balance;
 
         uint256 nativeOut = nativeAfter - nativeBefore;
         IWNative(wNative).deposit{value: nativeOut}();
         amountOutWNative = nativeOut;
+    }
+
+    function sellToToken(
+        address tokenManager,
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 minFunds,
+        address payerOrigin,
+        bool isV2
+    ) internal returns (uint256 amountOut) {
+        uint256 beforeBal = IERC20(tokenOut).balanceOf(address(this));
+
+        bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, address(this));
+        require(ok, "FOUR_SELL_V2_FROM");
+
+        uint256 afterBal = IERC20(tokenOut).balanceOf(address(this));
+        amountOut = afterBal - beforeBal;
     }
 }

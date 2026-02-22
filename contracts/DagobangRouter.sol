@@ -343,7 +343,11 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
             uint256 minFunds = desc.data.length > 0 ? abi.decode(desc.data, (uint256)) : 0;
             require(i == 0, "FOUR_SELL_POSITION");
             bool isV2 = _fourMemeIsV2(desc.poolAddress, desc.tokenIn);
-            amountOut = FourMemeSwapLib.sellToNativeWrapped(desc.poolAddress, wNative, desc.tokenIn, amountIn, minFunds, payerOrigin, isV2);
+            if (_isNative(desc.tokenOut)) {
+                amountOut = FourMemeSwapLib.sellToNativeWrapped(desc.poolAddress, wNative, desc.tokenIn, amountIn, minFunds, payerOrigin, isV2);
+            } else {
+                amountOut = FourMemeSwapLib.sellToToken(desc.poolAddress, desc.tokenIn, desc.tokenOut, amountIn, minFunds, payerOrigin, isV2);
+            }
             return amountOut;
         }
 

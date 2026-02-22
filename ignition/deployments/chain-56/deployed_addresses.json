@@ -12,5 +12,7 @@
   "DagobangRouterUpgradeV5Module#DagobangRouterProxy": "0x1E2FbB5DD674244D6185571153Ca56297a5F2406",
   "DagobangRouterUpgradeV5Module#DagobangRouter": "0xbcd2A64d2132bDa45a83284F6e126097cAb9F584",
   "DagobangRouterUpgradeV6Module#DagobangRouterProxy": "0x1E2FbB5DD674244D6185571153Ca56297a5F2406",
-  "DagobangRouterUpgradeV6Module#DagobangRouter": "0xD017c399da854DC5ae53Ea10D6f78dDD0BBb5fd1"
+  "DagobangRouterUpgradeV6Module#DagobangRouter": "0xD017c399da854DC5ae53Ea10D6f78dDD0BBb5fd1",
+  "DagobangRouterUpgradeV7Module#DagobangRouterProxy": "0x1E2FbB5DD674244D6185571153Ca56297a5F2406",
+  "DagobangRouterUpgradeV7Module#DagobangRouter": "0x2bf3FBe3c618fF3B5aB02590c877FBf1faaBA19B"
 }
