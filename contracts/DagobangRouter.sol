@@ -85,7 +85,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     event Swap(address indexed payer, address indexed receiver, address indexed feeToken, uint256 amountIn, uint256 amountOut, SwapDesc[] descs);
 
     modifier checkDeadline(uint256 deadline) {
-        require(block.timestamp <= deadline, "DEADLINE_EXPIRED");
+        require(block.timestamp <= deadline, "DL");
         _;
     }
 
@@ -154,7 +154,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     }
 
     function setFeeBps(uint16 feeBps_) external onlyOwner {
-        require(feeBps_ <= FEE_DENOMINATOR, "FEE_TOO_HIGH");
+        require(feeBps_ <= FEE_DENOMINATOR, "FTH");
         feeBps = feeBps_;
         emit FeeBpsUpdated(feeBps_);
     }
@@ -175,9 +175,9 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         uint256 minReturn,
         uint256 deadline
     ) external payable nonReentrant whenNotPaused checkDeadline(deadline) {
-        require(descs.length > 0, "EMPTY_DESCS");
-        require(feeToken == address(0), "INVALID_FEE_TOKEN");
-        require(amountIn > 0, "ZERO_INPUT");
+        require(descs.length > 0, "ED");
+        require(feeToken == address(0), "IFT");
+        require(amountIn > 0, "ZI");
 
         address payerOrigin = msg.sender;
         address tokenIn = descs[0].tokenIn;
@@ -186,11 +186,11 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         uint256 fee = 0;
         if (_isNative(tokenIn)) {
-            require(msg.value >= amountIn, "VALUE_MISMATCH");
+            require(msg.value >= amountIn, "VM");
             fee = _takeNativeFee(payerOrigin, amountIn);
             amountIn -= fee;
         } else {
-            require(msg.value == 0, "UNEXPECTED_VALUE");
+            require(msg.value == 0, "UV");
             if (descs[0].swapType == SwapType.FOUR_MEME_SELL) {
                 bool isV2 = _fourMemeIsV2(descs[0].poolAddress, tokenIn);
                 if (!isV2) {
@@ -207,18 +207,18 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         if (lastDesc.swapType == SwapType.FOUR_MEME_BUY_AMAP) {
-            require(!_isNative(tokenOut), "FOUR_MEME_NATIVE_OUT");
-            require(currentAmountIn >= minReturn, "MIN_RETURN");
+            require(!_isNative(tokenOut), "FNO");
+            require(currentAmountIn >= minReturn, "MR");
         } else {
             if (_isNative(tokenOut)) {
                 IWNative(wNative).withdraw(currentAmountIn);
                 fee = _takeNativeFee(payerOrigin, currentAmountIn);
                 uint256 netOut = currentAmountIn - fee;
-                require(netOut >= minReturn, "MIN_RETURN");
+                require(netOut >= minReturn, "MR");
                 (bool ok, ) = payerOrigin.call{value: netOut}("");
-                require(ok, "NATIVE_TRANSFER_FAILED");
+                require(ok, "NAT_TF");
             } else {
-                require(currentAmountIn >= minReturn, "MIN_RETURN");
+                require(currentAmountIn >= minReturn, "MR");
                 IERC20(tokenOut).safeTransfer(payerOrigin, currentAmountIn);
             }
         }
@@ -234,14 +234,14 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         uint256 minReturn,
         uint256 deadline
     ) external payable nonReentrant whenNotPaused checkDeadline(deadline) {
-        require(descs.length > 0, "EMPTY_DESCS");
-        require(feeToken == address(0), "INVALID_FEE_TOKEN");
-        require(percentBps > 0 && percentBps <= FEE_DENOMINATOR, "INVALID_PERCENT");
+        require(descs.length > 0, "ED");
+        require(feeToken == address(0), "IFT");
+        require(percentBps > 0 && percentBps <= FEE_DENOMINATOR, "IP");
 
         address payerOrigin = msg.sender;
         address tokenIn = descs[0].tokenIn;
-        require(!_isNative(tokenIn), "NATIVE_NOT_SUPPORTED");
-        require(msg.value == 0, "UNEXPECTED_VALUE");
+        require(!_isNative(tokenIn), "NNS");
+        require(msg.value == 0, "UV");
 
         uint256 balance = IERC20(tokenIn).balanceOf(payerOrigin);
         uint256 amountIn = (balance * percentBps) / FEE_DENOMINATOR;
@@ -251,7 +251,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
                 amountIn = (amountIn / 1e9) * 1e9;
             }
         }
-        require(amountIn > 0, "ZERO_INPUT");
+        require(amountIn > 0, "ZI");
 
         SwapDesc calldata lastDesc = descs[descs.length - 1];
         address tokenOut = lastDesc.tokenOut;
@@ -277,18 +277,18 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         if (lastDesc.swapType == SwapType.FOUR_MEME_BUY_AMAP) {
-            require(!_isNative(tokenOut), "FOUR_MEME_NATIVE_OUT");
-            require(currentAmountIn >= minReturn, "MIN_RETURN");
+            require(!_isNative(tokenOut), "FNO");
+            require(currentAmountIn >= minReturn, "MR");
         } else {
             if (_isNative(tokenOut)) {
                 IWNative(wNative).withdraw(currentAmountIn);
                 uint256 fee = _takeNativeFee(payerOrigin, currentAmountIn);
                 uint256 netOut = currentAmountIn - fee;
-                require(netOut >= minReturn, "MIN_RETURN");
+                require(netOut >= minReturn, "MR");
                 (bool ok, ) = payerOrigin.call{value: netOut}("");
-                require(ok, "NATIVE_TRANSFER_FAILED");
+                require(ok, "NAT_TF");
             } else {
-                require(currentAmountIn >= minReturn, "MIN_RETURN");
+                require(currentAmountIn >= minReturn, "MR");
                 IERC20(tokenOut).safeTransfer(payerOrigin, currentAmountIn);
             }
         }
@@ -300,7 +300,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         SwapDesc calldata desc = descs[i];
 
         if (desc.swapType == SwapType.V3_EXACT_IN) {
-            require(amountIn > 0, "ZERO_INPUT");
+            require(amountIn > 0, "ZI");
             address tokenIn = _wrapToken(desc.tokenIn);
             address tokenOut = _wrapToken(desc.tokenOut);
             if (desc.tokenIn == address(0)) {
@@ -311,7 +311,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         if (desc.swapType == SwapType.V2_EXACT_IN) {
-            require(amountIn > 0, "ZERO_INPUT");
+            require(amountIn > 0, "ZI");
             address tokenIn = _wrapToken(desc.tokenIn);
             address tokenOut = _wrapToken(desc.tokenOut);
             if (desc.tokenIn == address(0)) {
@@ -323,7 +323,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         if (desc.swapType == SwapType.V4_EXACT_IN) {
             address pm = v4PoolManager;
-            require(pm != address(0), "V4_NOT_CONFIGURED");
+            require(pm != address(0), "V4_NC");
             amountOut = V4SwapLib.swapExactIn(
                 pm,
                 wNative,
@@ -348,7 +348,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         if (desc.swapType == SwapType.FOUR_MEME_SELL) {
             uint256 minFunds = desc.data.length > 0 ? abi.decode(desc.data, (uint256)) : 0;
-            require(i == 0, "FOUR_SELL_POSITION");
+            require(i == 0, "FSP");
             bool isV2 = _fourMemeIsV2(desc.poolAddress, desc.tokenIn);
             if (_isNative(desc.tokenOut)) {
                 amountOut = FourMemeSwapLib.sellToNativeWrapped(desc.poolAddress, wNative, desc.tokenIn, amountIn, minFunds, payerOrigin, isV2);
@@ -364,8 +364,8 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         if (desc.swapType == SwapType.LUNA_LAUNCHPAD_V2) {
             address launchpad = lunaLaunchpad;
             address router = lunaRouter;
-            require(launchpad != address(0) && router != address(0), "LUNA_NOT_CONFIGURED");
-            require(desc.tokenIn == address(0) || desc.tokenOut == address(0), "LUNA_TOKEN");
+            require(launchpad != address(0) && router != address(0), "LNC");
+            require(desc.tokenIn == address(0) || desc.tokenOut == address(0), "LT");
             if (desc.tokenIn == address(0)) {
                 amountOut = LunaSwapLib.buy(launchpad, router, wNative, desc.tokenOut, amountIn);
             } else {
@@ -384,7 +384,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
             address vault = pancakeInfinityVault;
             address clPm = pancakeInfinityClPoolManager;
             address binPm = pancakeInfinityBinPoolManager;
-            require(vault != address(0) && clPm != address(0) && binPm != address(0), "INFINITY_NOT_CONFIGURED");
+            require(vault != address(0) && clPm != address(0) && binPm != address(0), "INF_NC");
             amountOut = PancakeInfinitySwapLib.swapExactIn(
                 vault,
                 clPm,
@@ -404,18 +404,18 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
             return amountOut;
         }
 
-        revert("INVALID_SWAP_TYPE");
+        revert("IST");
     }
 
     function unlockCallback(bytes calldata data) external returns (bytes memory) {
         address pm = v4PoolManager;
-        require(msg.sender == pm && pm != address(0), "V4_INVALID_CALLER");
+        require(msg.sender == pm && pm != address(0), "V4_IC");
         return V4SwapLib.unlockCallback(pm, wNative, data);
     }
 
     function lockAcquired(bytes calldata data) external returns (bytes memory) {
         address vault = pancakeInfinityVault;
-        require(msg.sender == vault && vault != address(0), "INFINITY_INVALID_CALLER");
+        require(msg.sender == vault && vault != address(0), "INF_IC");
         return PancakeInfinitySwapLib.lockAcquired(vault, wNative, pancakeInfinityClPoolManager, pancakeInfinityBinPoolManager, data);
     }
 
@@ -448,18 +448,18 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     }
 
     function _v3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) internal {
-        require(amount0Delta > 0 || amount1Delta > 0, "NO_DELTA");
+        require(amount0Delta > 0 || amount1Delta > 0, "ND");
 
         (address tokenIn, address tokenOut, uint24 fee, address payer) = abi.decode(data, (address, address, uint24, address));
 
         address pool = IUniswapV3Factory(v3Factory).getPool(tokenIn, tokenOut, fee);
-        require(msg.sender == pool, "INVALID_POOL");
+        require(msg.sender == pool, "IP");
 
         address token0 = IUniswapV3Pool(pool).token0();
         address token1 = IUniswapV3Pool(pool).token1();
 
         (address payToken, uint256 payAmount) = amount0Delta > 0 ? (token0, uint256(amount0Delta)) : (token1, uint256(amount1Delta));
-        require(payToken == tokenIn, "PAY_TOKEN_MISMATCH");
+        require(payToken == tokenIn, "PTM");
 
         if (payer == address(this)) {
             IERC20(payToken).safeTransfer(msg.sender, payAmount);
@@ -484,9 +484,9 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         address collector = feeCollector;
-        require(collector != address(0), "FEE_COLLECTOR_NOT_SET");
+        require(collector != address(0), "FEE_NC");
         (bool ok, ) = collector.call{value: fee}("");
-        require(ok, "FEE_TRANSFER_FAILED");
+        require(ok, "FEE_TF");
         emit FeeCollected(payer, address(0), fee);
     }
 }

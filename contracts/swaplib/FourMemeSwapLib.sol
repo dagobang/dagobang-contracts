@@ -31,19 +31,24 @@ library FourMemeSwapLib {
         uint256 tokenOutBeforeRecipient = IERC20(tokenOut).balanceOf(payerOrigin);
 
         if (tokenIn == address(0)) {
-            (bool ok, bytes memory ret) = tokenManager.staticcall(abi.encodeWithSelector(IFourTokenManager._tokenInfos.selector, tokenOut));
-            if (ok && ret.length > 0) {
-                IFourTokenManager.TokenInfo memory info = abi.decode(ret, (IFourTokenManager.TokenInfo));
-                if (info.template & 0x10000 > 0) {
-                    // X-Mode
-                    bytes memory args = abi.encode(uint256(0), tokenOut, payerOrigin, uint256(0), uint256(0), amountIn, minOut);
-                    IFourTokenManager(tokenManager).buyToken{value: amountIn}(args, 0, bytes("0x"));
-                } else {
-                    IFourTokenManager(tokenManager).buyTokenAMAP{value: amountIn}(tokenOut, payerOrigin, amountIn, minOut);
-                }
+            if (!isAmap) {
+                (bytes memory args, uint256 time, bytes memory signature) = abi.decode(data, (bytes, uint256, bytes));
+                IFourTokenManager(tokenManager).buyToken{value: amountIn}(args, time, signature);
             } else {
-                require(isAmap, "FVA");
-                IFourTokenManager(tokenManager).purchaseTokenAMAP{value: amountIn}(0, tokenOut, address(this), (amountIn * 99) / 100, minOut);
+                (bool ok, bytes memory ret) = tokenManager.staticcall(abi.encodeWithSelector(IFourTokenManager._tokenInfos.selector, tokenOut));
+                if (ok && ret.length > 0) {
+                    IFourTokenManager.TokenInfo memory info = abi.decode(ret, (IFourTokenManager.TokenInfo));
+                    if (info.template & 0x10000 > 0) {
+                        // X-Mode
+                        bytes memory args = abi.encode(uint256(0), tokenOut, payerOrigin, uint256(0), uint256(0), amountIn, minOut);
+                        IFourTokenManager(tokenManager).buyToken{value: amountIn}(args, 0, bytes("0x"));
+                    } else {
+                        IFourTokenManager(tokenManager).buyTokenAMAP{value: amountIn}(tokenOut, payerOrigin, amountIn, minOut);
+                    }
+                } else {
+                    require(isAmap, "FVA");
+                    IFourTokenManager(tokenManager).purchaseTokenAMAP{value: amountIn}(0, tokenOut, address(this), (amountIn * 99) / 100, minOut);
+                }
             }
             if (address(this).balance > 0) {
                 (bool refundOk, ) = payerOrigin.call{value: address(this).balance}("");

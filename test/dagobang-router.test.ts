@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { network } from "hardhat";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 
 describe("DagobangRouter", async () => {
   const { viem } = await network.connect();
@@ -369,6 +370,54 @@ describe("DagobangRouter", async () => {
     const userAfter = await meme.read.balanceOf([user.account.address]);
 
     assert.equal(userAfter - userBefore, amountIn * 2n);
+  });
+
+  it("swap supports native buy from four.meme with encoded args", async () => {
+    const wNative = await viem.deployContract("MockWNative");
+    const usd = await viem.deployContract("MockERC20", ["USD", "USD", 18]);
+    const meme = await viem.deployContract("MockERC20", ["MEME", "MEME", 18]);
+    const factory = await viem.deployContract("MockV3Factory");
+    const tokenManager = await viem.deployContract("MockFourMemeTokenManager", [usd.address, 2n]);
+
+    const router = await viem.deployContract("DagobangRouter");
+    await router.write.initialize([owner.account.address, wNative.address, factory.address]);
+
+    const amountIn = 1n * 10n ** 18n;
+    const expectedOut = amountIn * 2n;
+    const deadline = BigInt((await publicClient.getBlock()).timestamp + 60n);
+
+    const args = encodeAbiParameters(parseAbiParameters("uint256,address,address,uint256,uint256,uint256,uint256"), [
+      0n,
+      meme.address,
+      user.account.address,
+      0n,
+      0n,
+      amountIn,
+      expectedOut,
+    ]);
+    const data = encodeAbiParameters(parseAbiParameters("bytes,uint256,bytes"), [args, 0n, "0x"]);
+
+    const userBefore = await meme.read.balanceOf([user.account.address]);
+    const descs = [
+      {
+        swapType: 5,
+        tokenIn: ZERO,
+        tokenOut: meme.address,
+        poolAddress: tokenManager.address,
+        fee: 0,
+        tickSpacing: 0,
+        hooks: ZERO,
+        hookData: "0x",
+        poolManager: ZERO,
+        parameters: ZERO32,
+        data,
+      },
+    ] as const;
+
+    await router.write.swap([descs, ZERO, amountIn, expectedOut, deadline], { account: user.account, value: amountIn });
+    const userAfter = await meme.read.balanceOf([user.account.address]);
+
+    assert.equal(userAfter - userBefore, expectedOut);
   });
 
   it("swap supports tokenIn -> middle -> native", async () => {
