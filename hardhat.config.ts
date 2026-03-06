@@ -16,7 +16,7 @@ export default defineConfig({
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 10,
           },
           viaIR: true,
         },
@@ -26,7 +26,7 @@ export default defineConfig({
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 10,
           },
           viaIR: true,
         },

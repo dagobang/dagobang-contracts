@@ -185,23 +185,23 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         address tokenOut = lastDesc.tokenOut;
 
         uint256 fee = 0;
+        uint256 currentAmountIn = amountIn;
         if (_isNative(tokenIn)) {
             require(msg.value >= amountIn, "VM");
             fee = _takeNativeFee(payerOrigin, amountIn);
             amountIn -= fee;
+            currentAmountIn = amountIn;
         } else {
             require(msg.value == 0, "UV");
             if (descs[0].swapType == SwapType.FOUR_MEME_SELL) {
                 bool isV2 = _fourMemeIsV2(descs[0].poolAddress, tokenIn);
                 if (!isV2) {
-                    IERC20(tokenIn).safeTransferFrom(payerOrigin, address(this), amountIn);
+                    currentAmountIn = _pullFromAndGetDelta(tokenIn, payerOrigin, amountIn);
                 }
             } else {
-                IERC20(tokenIn).safeTransferFrom(payerOrigin, address(this), amountIn);
+                currentAmountIn = _pullFromAndGetDelta(tokenIn, payerOrigin, amountIn);
             }
         }
-
-        uint256 currentAmountIn = amountIn;
         for (uint256 i = 0; i < descs.length; i++) {
             currentAmountIn = _executeSwap(descs, i, currentAmountIn, payerOrigin);
         }
@@ -260,16 +260,10 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         if (descs[0].swapType == SwapType.FOUR_MEME_SELL) {
             bool isV2 = _fourMemeIsV2(descs[0].poolAddress, tokenIn);
             if (!isV2) {
-                uint256 beforeBal = IERC20(tokenIn).balanceOf(address(this));
-                IERC20(tokenIn).safeTransferFrom(payerOrigin, address(this), amountIn);
-                uint256 afterBal = IERC20(tokenIn).balanceOf(address(this));
-                currentAmountIn = afterBal - beforeBal;
+                currentAmountIn = _pullFromAndGetDelta(tokenIn, payerOrigin, amountIn);
             }
         } else {
-            uint256 beforeBal = IERC20(tokenIn).balanceOf(address(this));
-            IERC20(tokenIn).safeTransferFrom(payerOrigin, address(this), amountIn);
-            uint256 afterBal = IERC20(tokenIn).balanceOf(address(this));
-            currentAmountIn = afterBal - beforeBal;
+            currentAmountIn = _pullFromAndGetDelta(tokenIn, payerOrigin, amountIn);
         }
 
         for (uint256 i = 0; i < descs.length; i++) {
@@ -294,6 +288,13 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         }
 
         emit Swap(payerOrigin, payerOrigin, feeToken, amountIn, currentAmountIn, _toMemory(descs));
+    }
+
+    function _pullFromAndGetDelta(address token, address from, uint256 amountIn) internal returns (uint256 delta) {
+        uint256 beforeBal = IERC20(token).balanceOf(address(this));
+        IERC20(token).safeTransferFrom(from, address(this), amountIn);
+        uint256 afterBal = IERC20(token).balanceOf(address(this));
+        delta = afterBal - beforeBal;
     }
 
     function _executeSwap(SwapDesc[] calldata descs, uint256 i, uint256 amountIn, address payerOrigin) internal returns (uint256 amountOut) {
