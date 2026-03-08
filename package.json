@@ -26,6 +26,7 @@
     "deploy:router:local": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterDeploy.ts --network localhost",
     "upgrade:router:test": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgradeV18.ts --network bscTestnet",
     "upgrade:router:local": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgradeV18.ts --network localhost",
+    "set:fee": "dotenv -- cross-var npx hardhat setFee --network bsc",
     "verify:prod": "dotenv -- cross-var npx hardhat verifyContract --network bsc",
     "verify:test": "dotenv -- cross-var npx hardhat verifyContract --network bscTestnet",
     "verify:local": "dotenv -- cross-var npx hardhat verifyContract --network localhost",

@@ -18,7 +18,7 @@ const DagobangRouterDeployModule = buildModule("DagobangRouterDeployModule", (m)
   }
 
   const owner = m.getParameter("owner", m.getAccount(0));
-  const admin = m.getParameter("admin", m.getAccount(0));
+  const admin = m.getParameter("admin", m.getAccount(1));
   const routerImplementation = m.contract("DagobangRouter");
 
   const initData = m.encodeFunctionCall(routerImplementation, "initialize", [owner, wNative, v3Factory]);

@@ -4,11 +4,12 @@ import { configVariable, defineConfig } from "hardhat/config";
 import hardhatVerify from "@nomicfoundation/hardhat-verify";
 import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
 import checkGasTask from "./tasks/checkGas/index.js";
+import setFeeTask from "./tasks/setFee/index.js";
 import verifyContractTask from "./tasks/verify/index.js";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin, hardhatNetworkHelpers, hardhatVerify],
-  tasks: [checkGasTask, verifyContractTask],
+  tasks: [checkGasTask, setFeeTask, verifyContractTask],
   solidity: {
     profiles: {
       default: {
@@ -47,7 +48,7 @@ export default defineConfig({
     bsc: {
       type: "http",
       url: "https://bsc-dataseed.bnbchain.org",
-      accounts: [configVariable("PROD_DEPLOYER"), configVariable("PROD_CALLER")],
+      accounts: [configVariable("PROD_DEPLOYER"), configVariable("PROD_ADMIN")],
       // gasPrice: 5000000000, //5Gwei
       chainId: 56,
       timeout: 600000,
