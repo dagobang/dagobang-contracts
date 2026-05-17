@@ -2,28 +2,26 @@ import { getSelectedNetwork } from "@/utils/network.js";
 import { getDeploymentArgs } from "@/utils/readDeployment.js";
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const DagobangRouterUpgradeModule = buildModule("DagobangRouterUpgradeModule", (m) => {
-
+const DagobangRouterEthUpgradeModule = buildModule("DagobangRouterEthUpgradeModule", (m) => {
   const network = getSelectedNetwork();
-  const releaseTagDefault = process.env.BSC_ROUTER_RELEASE_TAG || process.env.ROUTER_RELEASE_TAG || "latest";
+  const releaseTagDefault = process.env.ETH_ROUTER_RELEASE_TAG || process.env.ROUTER_RELEASE_TAG || "latest";
   m.getParameter(
     "releaseTag",
     releaseTagDefault,
   );
   const releaseTagId = String(releaseTagDefault).replace(/[^A-Za-z0-9_]/g, "_");
-
-  const args = getDeploymentArgs(network).DagobangProxy;
+  const args = getDeploymentArgs(network).DagobangProxyEth;
   const proxyAddress = args.proxyAddress;
   const upgradeCallData = args.upgradeCallData;
 
-  const routerProxy = m.contractAt("DagobangProxy", proxyAddress, { id: "DagobangRouterProxy" });
-  const routerImplementation = m.contract("DagobangRouter", [], {
-    id: `DagobangRouter_${releaseTagId}`,
+  const routerProxy = m.contractAt("DagobangProxy", proxyAddress, { id: "DagobangRouterEthProxy" });
+  const routerImplementation = m.contract("DagobangRouterEth", [], {
+    id: `DagobangRouterEth_${releaseTagId}`,
   });
 
   m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {
     after: [routerImplementation],
-    id: `DagobangRouterProxy_upgradeToAndCall_${releaseTagId}`,
+    id: `DagobangRouterEthProxy_upgradeToAndCall_${releaseTagId}`,
   });
 
   return {
@@ -32,4 +30,4 @@ const DagobangRouterUpgradeModule = buildModule("DagobangRouterUpgradeModule", (
   };
 });
 
-export default DagobangRouterUpgradeModule;
+export default DagobangRouterEthUpgradeModule;

@@ -1,0 +1,10 @@
+{
+    "DagobangRouterEth": {
+        "wNative": "0xfff9976782d46cc05630d1f6ebab18b2324d6b14",
+        "v3Factory": "0x0227628f3f023bb0b980b67d528dded7b740c4dd"
+    },
+    "DagobangProxyEth": {
+        "proxyAddress": "",
+        "upgradeCallData": "0x"
+    }
+}

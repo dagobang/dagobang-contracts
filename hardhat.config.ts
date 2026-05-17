@@ -10,6 +10,19 @@ import verifyContractTask from "./tasks/verify/index.js";
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin, hardhatNetworkHelpers, hardhatVerify],
   tasks: [checkGasTask, setFeeTask, verifyContractTask],
+  chainDescriptors: {
+    999: {
+      name: "hyper",
+      chainType: "l1",
+      blockExplorers: {
+        etherscan: {
+          name: "HyperScan",
+          url: "https://www.hyperscan.com",
+          apiUrl: "https://api.etherscan.io/v2/api",
+        },
+      },
+    },
+  },
   solidity: {
     profiles: {
       default: {
@@ -62,6 +75,29 @@ export default defineConfig({
       gas: 8000000,
       timeout: 600000,
     },
+    eth: {
+      type: "http",
+      chainType: "l1",
+      url: configVariable("ETH_RPC_URL"),
+      accounts: [configVariable("ETH_DEPLOYER"), configVariable("ETH_ADMIN")],
+      chainId: 1,
+      timeout: 600000,
+    },
+    hyper: {
+      type: "http",
+      chainType: "l1",
+      url: "https://rpc.hypurrscan.io",
+      accounts: [configVariable("PROD_DEPLOYER"), configVariable("PROD_ADMIN")],
+      gasPrice: process.env.HYPER_GAS_PRICE ? BigInt(process.env.HYPER_GAS_PRICE) : 10000000000n,
+      ignition: {
+        maxFeePerGas: process.env.HYPER_MAX_FEE_PER_GAS ? BigInt(process.env.HYPER_MAX_FEE_PER_GAS) : 12000000000n,
+        maxPriorityFeePerGas: process.env.HYPER_MAX_PRIORITY_FEE_PER_GAS
+          ? BigInt(process.env.HYPER_MAX_PRIORITY_FEE_PER_GAS)
+          : 1000000000n,
+      },
+      chainId: 999,
+      timeout: 600000,
+    },
 
     hardhatMainnet: {
       type: "edr-simulated",
@@ -80,9 +116,7 @@ export default defineConfig({
   },
   verify: {
     etherscan: {
-      // Your API key for Etherscan
-      // Obtain one at https://etherscan.io/
-      apiKey: configVariable("BSC_TEST_SCAN_API_KEY"),
+      apiKey: process.env.ETHERSCAN_API_KEY || process.env.BSCSCAN_API_KEY || process.env.BSC_TEST_SCAN_API_KEY || "",
     },
   },
 });

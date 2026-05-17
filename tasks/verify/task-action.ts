@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const DEPLOYMENT_PATH = path.resolve(PROJECT_ROOT, "ignition", "deployments");
 
-function getProxyConstructorArgs(chainId: bigint): string[] | undefined {
+function getProxyConstructorArgs(chainId: bigint, networkName: string): string[] | undefined {
   const chainFolder = `chain-${chainId.toString()}`;
   const journalPath = path.resolve(DEPLOYMENT_PATH, chainFolder, "journal.jsonl");
   if (!fs.existsSync(journalPath)) {
@@ -26,13 +26,15 @@ function getProxyConstructorArgs(chainId: bigint): string[] | undefined {
     return undefined;
   }
 
+  const proxyArtifactId = resolveProxyArtifactId(networkName);
+
   const lines = fs.readFileSync(journalPath, "utf8").split("\n");
   for (const line of lines) {
     if (!line.trim()) continue;
     try {
       const entry = JSON.parse(line);
       if (
-        entry.artifactId === "DagobangRouterDeployModule#DagobangRouterProxy" &&
+        entry.artifactId === proxyArtifactId &&
         Array.isArray(entry.constructorArgs)
       ) {
         return entry.constructorArgs as string[];
@@ -43,6 +45,12 @@ function getProxyConstructorArgs(chainId: bigint): string[] | undefined {
 
   console.warn("constructorArgs for DagobangRouterProxy not found in journal, skip proxy verification");
   return undefined;
+}
+
+function resolveProxyArtifactId(networkName: string): string {
+  if (networkName === "hyper") return "DagobangRouterHyperDeployModule#DagobangRouterHyperProxy";
+  if (networkName === "eth") return "DagobangRouterEthDeployModule#DagobangRouterEthProxy";
+  return "DagobangRouterDeployModule#DagobangRouterProxy";
 }
 
 export default async function action(_args: any, hre: any) {
@@ -58,7 +66,7 @@ export default async function action(_args: any, hre: any) {
     return;
   }
 
-  const addresses = getDeploymentAddresses(`${chainId}`);
+  const addresses = getDeploymentAddresses(`${chainId}`, network);
 
   await tryVerify(
     verifyContract(
@@ -71,7 +79,7 @@ export default async function action(_args: any, hre: any) {
     ),
   );
 
-  const proxyConstructorArgs = getProxyConstructorArgs(chainId);
+  const proxyConstructorArgs = getProxyConstructorArgs(chainId, network);
   if (!proxyConstructorArgs) {
     return;
   }

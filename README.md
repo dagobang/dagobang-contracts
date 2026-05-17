@@ -5,6 +5,7 @@
 ## 合约入口
 
 - [contracts/DagobangRouter.sol](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/contracts/DagobangRouter.sol)
+- [contracts/DagobangRouterEth.sol](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/contracts/DagobangRouterEth.sol)
 - 可升级代理： [contracts/proxy/DagobangProxy.sol](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/contracts/proxy/DagobangProxy.sol)
 
 ## 统一入口：swap()
@@ -16,6 +17,8 @@ DagobangRouter 使用 `swap(SwapDesc[] descs, address feeToken, uint256 amountIn
 
 ### SwapType（数值枚举）
 
+#### BSC（DagobangRouter）
+
 与链上枚举顺序一致：
 - `0`：V2_EXACT_IN
 - `1`：V3_EXACT_IN
@@ -25,6 +28,17 @@ DagobangRouter 使用 `swap(SwapDesc[] descs, address feeToken, uint256 amountIn
 - `5`：FOUR_MEME_BUY_AMAP
 - `6`：FOUR_MEME_SELL
 - `7`：FLAP_EXACT_INPUT
+
+#### ETH（DagobangRouterEth）
+
+与链上枚举顺序一致：
+- `0`：V2_EXACT_IN
+- `1`：V3_EXACT_IN
+- `2`：V4_EXACT_IN
+- `3`：OKX_EXACT_IN
+- `4`：TRENCH_EXACT_IN
+- `5`：LIVO_EXACT_IN
+- `6`：PRINTR_EXACT_IN
 
 ### SwapDesc 字段说明
 
@@ -119,6 +133,8 @@ DagobangRouter 使用 `swap(SwapDesc[] descs, address feeToken, uint256 amountIn
 模块：
 - 首次部署（实现合约 + 代理 + initialize）：[DagobangRouterDeploy.ts](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/ignition/modules/dagobang/DagobangRouterDeploy.ts)
 - 升级部署（部署新实现合约 + proxy.upgradeToAndCall）：[DagobangRouterUpgrade.ts](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/ignition/modules/dagobang/DagobangRouterUpgrade.ts)
+- ETH 首次部署（实现合约 + 代理 + initialize）：[DagobangRouterEthDeploy.ts](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/ignition/modules/dagobang-eth/DagobangRouterEthDeploy.ts)
+- ETH 升级部署（部署新实现合约 + proxy.upgradeToAndCall）：[DagobangRouterEthUpgrade.ts](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/ignition/modules/dagobang-eth/DagobangRouterEthUpgrade.ts)
 
 参数模板：
 - 本地（mocks）：[dagobang.local.deploy.json](file:///home/catgroup/projects/remote/meme/dagobang/dagobang-contracts/ignition/parameters/dagobang.local.deploy.json)
@@ -140,10 +156,33 @@ npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgrade.ts \
   --network bscTestnet
 ```
 
+ETH 升级部署示例：
+```bash
+npx hardhat ignition deploy ignition/modules/dagobang-eth/DagobangRouterEthUpgrade.ts \
+  --network eth
+```
+
 升级要点：
 - `proxyAddress` 传已部署的 RouterProxy 地址
 - 升级交易必须由该 Proxy 的 `admin` 发起，否则会回滚
 - `upgradeCallData` 默认为 `"0x"`；如果你要升级后执行 reinitializer，可传入对应 calldata
+- 推荐按链设置发布标签，避免每次升级都维护 `DagobangRouterUpgradeV18.ts` 这类递增文件名：
+  - BSC：`BSC_ROUTER_RELEASE_TAG`（例如 `V19`）
+  - ETH：`ETH_ROUTER_RELEASE_TAG`（例如 `V1`）
+  - 兼容回退：如果未设置上面两个变量，会回退读取 `ROUTER_RELEASE_TAG`
+
+推荐脚本（无需再递增版本文件名）：
+```bash
+yarn upgrade:router:prod
+BSC_ROUTER_RELEASE_TAG=V19 yarn upgrade:router:prod
+ETH_ROUTER_RELEASE_TAG=V1 yarn upgrade:router:eth
+HYPER_ROUTER_RELEASE_TAG=V2 yarn upgrade:router:hyper
+```
+
+Hyper 升级补充：
+- `ignition/config/hyper.json` 中的 `DagobangRouterHyper.v3Factory` 会在升级完成后自动调用 `setV3Factory(...)`
+- 当前 Hyper 主网 `v3Factory` 配置为 `0xB1c0fa0B789320044A6F623cFe5eBda9562602E3`
+- 因此升级 `DagobangRouterHyper` 后，不需要再手动单独补一次 `setV3Factory`
 
 ## 合约验证
 ### 直连 Etherscan 验证（prod）
