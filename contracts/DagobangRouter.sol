@@ -24,6 +24,9 @@ import {IFourTokenManager} from "./interfaces/IFourTokenManager.sol";
 import {FourMemeSwapLib} from "./swaplib/FourMemeSwapLib.sol";
 import {FlapSwapLib} from "./swaplib/FlapSwapLib.sol";
 import {LunaSwapLib} from "./swaplib/LunaSwapLib.sol";
+import {PrintrSwapLib} from "./swaplib/PrintrSwapLib.sol";
+import {OpenFourSwapLib} from "./swaplib/OpenFourSwapLib.sol";
+import {LikwidSwapLib} from "./swaplib/LikwidSwapLib.sol";
 
 contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable, IUniswapV3SwapCallback, IPancakeV3SwapCallback {
     using SafeERC20 for IERC20;
@@ -65,7 +68,10 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         LUNA_LAUNCHPAD_V2,
         FOUR_MEME_BUY_AMAP,
         FOUR_MEME_SELL,
-        FLAP_EXACT_INPUT
+        FLAP_EXACT_INPUT,
+        PRINTR_EXACT_IN,
+        OPEN_FOUR_EXACT_IN,
+        LIKWID_EXACT_IN
     }
 
     struct SwapDesc {
@@ -378,6 +384,21 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         if (desc.swapType == SwapType.FLAP_EXACT_INPUT) {
             uint256 minOut = desc.data.length > 0 ? abi.decode(desc.data, (uint256)) : 0;
             amountOut = FlapSwapLib.exactInput(desc.poolAddress, wNative, desc.tokenIn, desc.tokenOut, amountIn, minOut);
+            return amountOut;
+        }
+
+        if (desc.swapType == SwapType.PRINTR_EXACT_IN) {
+            amountOut = PrintrSwapLib.swap(wNative, desc.poolAddress, desc.tokenIn, desc.tokenOut, amountIn, address(this));
+            return amountOut;
+        }
+
+        if (desc.swapType == SwapType.OPEN_FOUR_EXACT_IN) {
+            amountOut = OpenFourSwapLib.swap(wNative, desc.poolAddress, desc.tokenIn, desc.tokenOut, amountIn, desc.data, payerOrigin);
+            return amountOut;
+        }
+
+        if (desc.swapType == SwapType.LIKWID_EXACT_IN) {
+            amountOut = LikwidSwapLib.swap(wNative, desc.poolAddress, desc.tokenIn, desc.tokenOut, amountIn, desc.fee, desc.tickSpacing, payerOrigin);
             return amountOut;
         }
 

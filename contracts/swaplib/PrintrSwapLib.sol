@@ -11,7 +11,7 @@ library PrintrSwapLib {
   using SafeERC20 for IERC20;
 
   function swap(address wNative, address printrTrading, address tokenIn, address tokenOut, uint256 amountIn, address recipient)
-    internal
+    external
     returns (uint256 amountOut)
   {
     require(printrTrading != address(0), "PRINTR_ADDR_0");

@@ -11,7 +11,7 @@ library LunaSwapLib {
   using SafeERC20 for IERC20;
 
   function buy(address launchpad, address router, address wNative, address tokenOut, uint256 amountIn)
-    internal
+    external
     returns (uint256 amountOut)
   {
     IWNative(wNative).deposit{value: amountIn}();
@@ -25,7 +25,7 @@ library LunaSwapLib {
   }
 
   function sell(address launchpad, address router, address wNative, address tokenIn, uint256 amountIn)
-    internal
+    external
     returns (uint256 amountOutWNative)
   {
     IERC20(tokenIn).forceApprove(router, amountIn);

@@ -24,7 +24,7 @@ library FourMemeSwapLib {
         return true;
     }
 
-    function buy(address tokenManager, address tokenIn, address tokenOut, uint256 amountIn, bytes calldata data, address payerOrigin) internal returns (uint256 amountOut) {
+    function buy(address tokenManager, address tokenIn, address tokenOut, uint256 amountIn, bytes calldata data, address payerOrigin) external returns (uint256 amountOut) {
         bool isAmap = data.length == 0 || data.length == 32;
         uint256 minOut = data.length == 32 ? abi.decode(data, (uint256)) : 0;
         uint256 tokenOutBeforeRouter = IERC20(tokenOut).balanceOf(address(this));
@@ -85,7 +85,7 @@ library FourMemeSwapLib {
         uint256 minFunds,
         address payerOrigin,
         bool isV2
-    ) internal returns (uint256 amountOutWNative) {
+    ) external returns (uint256 amountOutWNative) {
         uint256 nativeBefore = address(this).balance;
         bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, address(this));
         require(ok, "FS2");
@@ -104,7 +104,7 @@ library FourMemeSwapLib {
         uint256 minFunds,
         address payerOrigin,
         bool isV2
-    ) internal returns (uint256 amountOut) {
+    ) external returns (uint256 amountOut) {
         uint256 beforeRecipient = IERC20(tokenOut).balanceOf(payerOrigin);
 
         bool ok = _sell(tokenManager, tokenIn, amountIn, minFunds, payerOrigin, isV2, address(this));

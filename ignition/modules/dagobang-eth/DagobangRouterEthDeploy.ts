@@ -18,7 +18,12 @@ const DagobangRouterEthDeployModule = buildModule("DagobangRouterEthDeployModule
 
   const owner = m.getParameter("owner", m.getAccount(0));
   const admin = m.getParameter("admin", m.getAccount(1));
-  const routerImplementation = m.contract("DagobangRouterEth");
+  const printrSwapLib = m.library("PrintrSwapLib");
+  const routerImplementation = m.contract("DagobangRouterEth", [], {
+    libraries: {
+      PrintrSwapLib: printrSwapLib,
+    },
+  });
 
   const initData = m.encodeFunctionCall(routerImplementation, "initialize", [owner, wNative, v3Factory]);
   const routerProxy = m.contract("DagobangProxy", [routerImplementation, admin, initData], {

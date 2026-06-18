@@ -22,6 +22,7 @@
     "show:router": "dotenv -- cross-var npx hardhat ignition visualize ignition/modules/dagobang/DagobangRouterDeploy.ts",
     "deploy:router:prod": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterDeploy.ts --network bsc",
     "upgrade:router:prod": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgrade.ts --network bsc",
+    "upgrade:router:prod:proxy": "dotenv -- cross-var NODE_OPTIONS='-r global-agent/bootstrap' GLOBAL_AGENT_HTTPS_PROXY=$HTTPS_PROXY npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgrade.ts --network bsc",
     "deploy:router:test": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterDeploy.ts --network bscTestnet",
     "deploy:router:local": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterDeploy.ts --network localhost",
     "upgrade:router:test": "dotenv -- cross-var npx hardhat ignition deploy ignition/modules/dagobang/DagobangRouterUpgrade.ts --network bscTestnet",

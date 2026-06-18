@@ -10,13 +10,22 @@ describe("DagobangRouterEth", async () => {
   const ZERO = "0x0000000000000000000000000000000000000000";
   const ZERO32 = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+  async function deployRouterEth() {
+    const printrSwapLib = await viem.deployContract("PrintrSwapLib");
+    return await (viem as any).deployContract("DagobangRouterEth", [], {
+      libraries: {
+        PrintrSwapLib: printrSwapLib.address,
+      },
+    });
+  }
+
   it("supports native -> token via PRINTR_EXACT_IN", async () => {
     const wNative = await viem.deployContract("MockWNative");
     const factory = await viem.deployContract("MockV3Factory");
     const tokenOut = await viem.deployContract("MockERC20", ["PT", "PT", 18]);
     const printr = await viem.deployContract("MockPrintrTrading");
 
-    const router = await viem.deployContract("DagobangRouterEth");
+    const router = await deployRouterEth();
     await router.write.initialize([owner.account.address, wNative.address, factory.address]);
 
     const amountIn = 1n * 10n ** 18n;
@@ -53,7 +62,7 @@ describe("DagobangRouterEth", async () => {
     const printr = await viem.deployContract("MockPrintrTrading");
     await printr.write.seed({ value: 10n * 10n ** 18n });
 
-    const router = await viem.deployContract("DagobangRouterEth");
+    const router = await deployRouterEth();
     await router.write.initialize([owner.account.address, wNative.address, factory.address]);
 
     const amountIn = 2n * 10n ** 18n;
@@ -94,7 +103,7 @@ describe("DagobangRouterEth", async () => {
     const v4PoolManager = await viem.deployContract("MockV4PoolManager");
     await tokenOut.write.mint([v4PoolManager.address, 1_000_000n * 10n ** 18n]);
 
-    const router = await viem.deployContract("DagobangRouterEth");
+    const router = await deployRouterEth();
     await router.write.initialize([owner.account.address, wNative.address, factory.address]);
     await (router.write as any).setV4PoolManager([v4PoolManager.address]);
 

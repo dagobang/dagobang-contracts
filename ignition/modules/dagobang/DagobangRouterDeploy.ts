@@ -19,7 +19,22 @@ const DagobangRouterDeployModule = buildModule("DagobangRouterDeployModule", (m)
 
   const owner = m.getParameter("owner", m.getAccount(0));
   const admin = m.getParameter("admin", m.getAccount(1));
-  const routerImplementation = m.contract("DagobangRouter");
+  const flapSwapLib = m.library("FlapSwapLib");
+  const fourMemeSwapLib = m.library("FourMemeSwapLib");
+  const lunaSwapLib = m.library("LunaSwapLib");
+  const printrSwapLib = m.library("PrintrSwapLib");
+  const openFourSwapLib = m.library("OpenFourSwapLib");
+  const likwidSwapLib = m.library("LikwidSwapLib");
+  const routerImplementation = m.contract("DagobangRouter", [], {
+    libraries: {
+      FlapSwapLib: flapSwapLib,
+      FourMemeSwapLib: fourMemeSwapLib,
+      LunaSwapLib: lunaSwapLib,
+      PrintrSwapLib: printrSwapLib,
+      OpenFourSwapLib: openFourSwapLib,
+      LikwidSwapLib: likwidSwapLib,
+    },
+  });
 
   const initData = m.encodeFunctionCall(routerImplementation, "initialize", [owner, wNative, v3Factory]);
   const routerProxy = m.contract("DagobangProxy", [routerImplementation, admin, initData], {

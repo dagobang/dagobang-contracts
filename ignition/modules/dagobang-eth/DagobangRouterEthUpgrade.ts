@@ -15,8 +15,12 @@ const DagobangRouterEthUpgradeModule = buildModule("DagobangRouterEthUpgradeModu
   const upgradeCallData = args.upgradeCallData;
 
   const routerProxy = m.contractAt("DagobangProxy", proxyAddress, { id: "DagobangRouterEthProxy" });
+  const printrSwapLib = m.library("PrintrSwapLib", { id: `PrintrSwapLibEth_${releaseTagId}` });
   const routerImplementation = m.contract("DagobangRouterEth", [], {
     id: `DagobangRouterEth_${releaseTagId}`,
+    libraries: {
+      PrintrSwapLib: printrSwapLib,
+    },
   });
 
   m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {

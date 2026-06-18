@@ -17,7 +17,7 @@ library FlapSwapLib {
     address tokenOut,
     uint256 amountIn,
     uint256 minOut
-  ) internal returns (uint256 amountOutWrappedNative) {
+  ) external returns (uint256 amountOutWrappedNative) {
     if (tokenIn == address(0)) {
       uint256 outBeforeInNative = IERC20(tokenOut).balanceOf(address(this));
       IFlapTokenManager.ExactInputParams memory paramsInNative = IFlapTokenManager.ExactInputParams({

@@ -30,7 +30,7 @@ export default defineConfig({
         settings: {
           optimizer: {
             enabled: true,
-            runs: 10,
+            runs: 1,
           },
           viaIR: true,
         },
@@ -40,7 +40,7 @@ export default defineConfig({
         settings: {
           optimizer: {
             enabled: true,
-            runs: 10,
+            runs: 1,
           },
           viaIR: true,
         },
@@ -60,9 +60,13 @@ export default defineConfig({
     // bsc network
     bsc: {
       type: "http",
-      url: "https://bsc-dataseed.bnbchain.org",
+      url: "https://bsc.api.pocket.network",
       accounts: [configVariable("PROD_DEPLOYER"), configVariable("PROD_ADMIN")],
-      // gasPrice: 5000000000, //5Gwei
+      gasPrice: 300000000, //0.3Gwei
+      ignition: {
+        maxFeePerGas: 1000000000n, // 1.0 Gwei cap for type-2 txs
+        maxPriorityFeePerGas: 500000000n, // 0.5 Gwei tip to match current deploy setting
+      },
       chainId: 56,
       timeout: 600000,
     },

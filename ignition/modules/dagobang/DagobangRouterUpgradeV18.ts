@@ -10,7 +10,22 @@ const DagobangRouterUpgradeV18Module = buildModule("DagobangRouterUpgradeV18Modu
   const upgradeCallData = args.upgradeCallData;
 
   const routerProxy = m.contractAt("DagobangProxy", proxyAddress, { id: "DagobangRouterProxy" });
-  const routerImplementation = m.contract("DagobangRouter");
+  const flapSwapLib = m.library("FlapSwapLib", { id: "FlapSwapLib_V18" });
+  const fourMemeSwapLib = m.library("FourMemeSwapLib", { id: "FourMemeSwapLib_V18" });
+  const lunaSwapLib = m.library("LunaSwapLib", { id: "LunaSwapLib_V18" });
+  const printrSwapLib = m.library("PrintrSwapLib", { id: "PrintrSwapLib_V18" });
+  const openFourSwapLib = m.library("OpenFourSwapLib", { id: "OpenFourSwapLib_V18" });
+  const likwidSwapLib = m.library("LikwidSwapLib", { id: "LikwidSwapLib_V18" });
+  const routerImplementation = m.contract("DagobangRouter", [], {
+    libraries: {
+      FlapSwapLib: flapSwapLib,
+      FourMemeSwapLib: fourMemeSwapLib,
+      LunaSwapLib: lunaSwapLib,
+      PrintrSwapLib: printrSwapLib,
+      OpenFourSwapLib: openFourSwapLib,
+      LikwidSwapLib: likwidSwapLib,
+    },
+  });
 
   m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {
     after: [routerImplementation],
@@ -24,4 +39,3 @@ const DagobangRouterUpgradeV18Module = buildModule("DagobangRouterUpgradeV18Modu
 });
 
 export default DagobangRouterUpgradeV18Module;
-
