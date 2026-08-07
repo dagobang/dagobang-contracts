@@ -23,14 +23,14 @@ library V2SwapLib {
     uint256 fee = feeBps == 0 ? 25 : uint256(feeBps);
     require(fee < 10_000, "V2_INVALID_FEE");
 
+    uint256 recipientBefore = IERC20(tokenOut).balanceOf(recipient);
+
+    IERC20(tokenIn).safeTransfer(pair, amountIn);
+
     (uint112 r0, uint112 r1, ) = IUniswapV2Pair(pair).getReserves();
 
     bool zeroForOne = tokenIn < tokenOut;
     (uint256 reserveIn, uint256 reserveOut) = zeroForOne ? (uint256(r0), uint256(r1)) : (uint256(r1), uint256(r0));
-
-    uint256 recipientBefore = IERC20(tokenOut).balanceOf(recipient);
-
-    IERC20(tokenIn).safeTransfer(pair, amountIn);
 
     uint256 balanceIn = IERC20(tokenIn).balanceOf(pair);
     uint256 amountDelta = balanceIn - reserveIn;
@@ -54,4 +54,3 @@ library V2SwapLib {
     return numerator / denominator;
   }
 }
-

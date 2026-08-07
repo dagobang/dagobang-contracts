@@ -11,7 +11,7 @@ library FlapSwapLib {
   using SafeERC20 for IERC20;
 
   function exactInput(
-    address manager,
+    address portal,
     address wNative,
     address tokenIn,
     address tokenOut,
@@ -27,13 +27,13 @@ library FlapSwapLib {
         minOutputAmount: minOut,
         permitData: bytes("")
       });
-      IFlapTokenManager(manager).swapExactInput{value: amountIn}(paramsInNative);
+      IFlapTokenManager(portal).swapExactInput{value: amountIn}(paramsInNative);
       uint256 outAfterInNative = IERC20(tokenOut).balanceOf(address(this));
       return outAfterInNative - outBeforeInNative;
     }
 
     if (tokenOut == address(0)) {
-      IERC20(tokenIn).forceApprove(manager, amountIn);
+      IERC20(tokenIn).forceApprove(portal, amountIn);
       uint256 nativeBefore = address(this).balance;
       IFlapTokenManager.ExactInputParams memory paramsToNative = IFlapTokenManager.ExactInputParams({
         inputToken: tokenIn,
@@ -42,14 +42,14 @@ library FlapSwapLib {
         minOutputAmount: minOut,
         permitData: bytes("")
       });
-      IFlapTokenManager(manager).swapExactInput(paramsToNative);
+      IFlapTokenManager(portal).swapExactInput(paramsToNative);
       uint256 nativeAfter = address(this).balance;
       uint256 nativeOut = nativeAfter - nativeBefore;
       IWNative(wNative).deposit{value: nativeOut}();
       return nativeOut;
     }
 
-    IERC20(tokenIn).forceApprove(manager, amountIn);
+    IERC20(tokenIn).forceApprove(portal, amountIn);
     uint256 outBeforeTokenToToken = IERC20(tokenOut).balanceOf(address(this));
     IFlapTokenManager.ExactInputParams memory paramsTokenToToken = IFlapTokenManager.ExactInputParams({
       inputToken: tokenIn,
@@ -58,7 +58,7 @@ library FlapSwapLib {
       minOutputAmount: minOut,
       permitData: bytes("")
     });
-    IFlapTokenManager(manager).swapExactInput(paramsTokenToToken);
+    IFlapTokenManager(portal).swapExactInput(paramsTokenToToken);
     uint256 outAfterTokenToToken = IERC20(tokenOut).balanceOf(address(this));
     return outAfterTokenToToken - outBeforeTokenToToken;
   }

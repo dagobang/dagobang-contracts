@@ -35,5 +35,13 @@
   "DagobangRouterUpgradeModule#LunaSwapLib_V19": "0x96D96E7dEE0FDcEbA32F2b58F716193828644694",
   "DagobangRouterUpgradeModule#OpenFourSwapLib_V19": "0x464bb33160fD6F9598b28f5dFF2775F176dF6909",
   "DagobangRouterUpgradeModule#PrintrSwapLib_V19": "0x10a31b8e05fECb41BC8491a9A1ff7b5f7758eB8a",
-  "DagobangRouterUpgradeModule#DagobangRouter_V19": "0x7161e9f81146E7BBB2CEE00BEf45763edFed122f"
+  "DagobangRouterUpgradeModule#DagobangRouter_V19": "0x7161e9f81146E7BBB2CEE00BEf45763edFed122f",
+  "DagobangRouterUpgradeModule#DagobangRouterProxyAsRouter": "0x1E2FbB5DD674244D6185571153Ca56297a5F2406",
+  "DagobangRouterUpgradeModule#FlapSwapLib_V20": "0x2445e0aF9Ad7e280bb70F077De3d38e6386EfBC7",
+  "DagobangRouterUpgradeModule#FourMemeSwapLib_V20": "0x697c4dC6B083e5Dea9365896345cFe97B1Bd0864",
+  "DagobangRouterUpgradeModule#LikwidSwapLib_V20": "0xe0f1D8fE7416A79C8A7fa1696697A6EbAf53D5C4",
+  "DagobangRouterUpgradeModule#LunaSwapLib_V20": "0x8509F68cD3BBD2Ef6F1d1aa5D23e65928499C3D5",
+  "DagobangRouterUpgradeModule#OpenFourSwapLib_V20": "0x6128CA775A28eB6CC9Dc675e75eBa9e6199CbDD2",
+  "DagobangRouterUpgradeModule#PrintrSwapLib_V20": "0x13a07e1793BBe8B1FE2935694EF0b543975d3A3B",
+  "DagobangRouterUpgradeModule#DagobangRouter_V20": "0xd8F145592d3165cE9853b9875f56132b42F209B9"
 }

@@ -44,6 +44,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     address public pancakeInfinityVault;
     address public pancakeInfinityClPoolManager;
     address public pancakeInfinityBinPoolManager;
+    address public flapPortal;
     uint256 public feeThreshold;
 
     event FeeCollectorUpdated(address indexed feeCollector);
@@ -57,6 +58,7 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     event PancakeInfinityVaultUpdated(address indexed pancakeInfinityVault);
     event PancakeInfinityClPoolManagerUpdated(address indexed pancakeInfinityClPoolManager);
     event PancakeInfinityBinPoolManagerUpdated(address indexed pancakeInfinityBinPoolManager);
+    event FlapPortalUpdated(address indexed flapPortal);
 
     event FeeCollected(address indexed payer, address indexed token, uint256 amount);
 
@@ -152,6 +154,11 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     function setPancakeInfinityBinPoolManager(address pancakeInfinityBinPoolManager_) external onlyOwner {
         pancakeInfinityBinPoolManager = pancakeInfinityBinPoolManager_;
         emit PancakeInfinityBinPoolManagerUpdated(pancakeInfinityBinPoolManager_);
+    }
+
+    function setFlapPortal(address flapPortal_) external onlyOwner {
+        flapPortal = flapPortal_;
+        emit FlapPortalUpdated(flapPortal_);
     }
 
     function setFeeCollector(address feeCollector_) external onlyOwner {
@@ -383,7 +390,9 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
 
         if (desc.swapType == SwapType.FLAP_EXACT_INPUT) {
             uint256 minOut = desc.data.length > 0 ? abi.decode(desc.data, (uint256)) : 0;
-            amountOut = FlapSwapLib.exactInput(desc.poolAddress, wNative, desc.tokenIn, desc.tokenOut, amountIn, minOut);
+            address portal = flapPortal != address(0) ? flapPortal : desc.poolAddress;
+            require(portal != address(0), "FNC");
+            amountOut = FlapSwapLib.exactInput(portal, wNative, desc.tokenIn, desc.tokenOut, amountIn, minOut);
             return amountOut;
         }
 
