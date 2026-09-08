@@ -296,11 +296,12 @@ contract DagobangRouterEth is Initializable, OwnableUpgradeable, PausableUpgrade
     }
   }
 
-  function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
-    require(amount0Delta > 0 || amount1Delta > 0, "ND");
-    (address tokenIn, address tokenOut, uint24 fee, address payer) = abi.decode(data, (address, address, uint24, address));
-    address pool = IUniswapV3Factory(v3Factory).getPool(tokenIn, tokenOut, fee);
-    require(msg.sender == pool, "IP");
+    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
+      require(amount0Delta > 0 || amount1Delta > 0, "ND");
+      (address tokenIn, address tokenOut, uint24 fee, address payer, address factory) = abi.decode(data, (address, address, uint24, address, address));
+      require(factory == v3Factory, "UF");
+      address pool = IUniswapV3Factory(factory).getPool(tokenIn, tokenOut, fee);
+      require(msg.sender == pool, "IP");
 
     address token0 = IUniswapV3Pool(pool).token0();
     address token1 = IUniswapV3Pool(pool).token1();

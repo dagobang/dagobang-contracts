@@ -31,11 +31,10 @@ library V3SwapLib {
       zeroForOne,
       int256(amountIn),
       sqrtPriceLimitX96,
-      abi.encode(tokenIn, tokenOut, fee, address(this))
+      abi.encode(tokenIn, tokenOut, fee, address(this), v3Factory)
     );
 
     int256 amountOutSigned = zeroForOne ? amount1 : amount0;
     amountOut = uint256(-amountOutSigned);
   }
 }
-

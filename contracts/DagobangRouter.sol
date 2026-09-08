@@ -46,11 +46,13 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     address public pancakeInfinityBinPoolManager;
     address public flapPortal;
     uint256 public feeThreshold;
+    address public uniswapV3Factory;
 
     event FeeCollectorUpdated(address indexed feeCollector);
     event FeeBpsUpdated(uint16 feeBps);
     event FeeExemptUpdated(address indexed account, bool isExempt);
     event V3FactoryUpdated(address indexed v3Factory);
+    event UniswapV3FactoryUpdated(address indexed uniswapV3Factory);
     event WNativeUpdated(address indexed wNative);
     event LunaLaunchpadUpdated(address indexed lunaLaunchpad);
     event LunaRouterUpdated(address indexed lunaRouter);
@@ -124,6 +126,11 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
     function setV3Factory(address v3Factory_) external onlyOwner {
         v3Factory = v3Factory_;
         emit V3FactoryUpdated(v3Factory_);
+    }
+
+    function setUniswapV3Factory(address uniswapV3Factory_) external onlyOwner {
+        uniswapV3Factory = uniswapV3Factory_;
+        emit UniswapV3FactoryUpdated(uniswapV3Factory_);
     }
 
     function setLunaLaunchpad(address lunaLaunchpad_) external onlyOwner {
@@ -320,7 +327,8 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
             if (desc.tokenIn == address(0)) {
                 IWNative(wNative).deposit{value: amountIn}();
             }
-            amountOut = V3SwapLib.exactIn(v3Factory, tokenIn, tokenOut, desc.fee, desc.poolAddress, amountIn, address(this));
+            address factory = _v3FactoryFor(desc.poolManager);
+            amountOut = V3SwapLib.exactIn(factory, tokenIn, tokenOut, desc.fee, desc.poolAddress, amountIn, address(this));
             return amountOut;
         }
 
@@ -478,12 +486,25 @@ contract DagobangRouter is Initializable, OwnableUpgradeable, PausableUpgradeabl
         _v3SwapCallback(amount0Delta, amount1Delta, data);
     }
 
+    function _v3FactoryFor(address factoryOverride) internal view returns (address factory) {
+        factory = factoryOverride == address(0) ? v3Factory : factoryOverride;
+        require(_isAllowedV3Factory(factory), "UF");
+    }
+
+    function _isAllowedV3Factory(address factory) internal view returns (bool) {
+        if (factory == address(0)) return false;
+        if (factory == v3Factory) return true;
+        address extra = uniswapV3Factory;
+        return extra != address(0) && factory == extra;
+    }
+
     function _v3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) internal {
         require(amount0Delta > 0 || amount1Delta > 0, "ND");
 
-        (address tokenIn, address tokenOut, uint24 fee, address payer) = abi.decode(data, (address, address, uint24, address));
+        (address tokenIn, address tokenOut, uint24 fee, address payer, address factory) = abi.decode(data, (address, address, uint24, address, address));
+        require(_isAllowedV3Factory(factory), "UF");
 
-        address pool = IUniswapV3Factory(v3Factory).getPool(tokenIn, tokenOut, fee);
+        address pool = IUniswapV3Factory(factory).getPool(tokenIn, tokenOut, fee);
         require(msg.sender == pool, "IP");
 
         address token0 = IUniswapV3Pool(pool).token0();

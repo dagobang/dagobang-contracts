@@ -60,7 +60,7 @@ export default defineConfig({
     // bsc network
     bsc: {
       type: "http",
-      url: "https://bsc.api.pocket.network",
+      url: "https://bsc-dataseed-public.bnbchain.org",
       accounts: [configVariable("PROD_DEPLOYER"), configVariable("PROD_ADMIN")],
       gasPrice: 300000000, //0.3Gwei
       ignition: {

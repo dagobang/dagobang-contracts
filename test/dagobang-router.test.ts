@@ -70,6 +70,46 @@ describe("DagobangRouter", async () => {
     assert.equal(userTokenAfter - userTokenBefore, amountIn);
   });
 
+  it("swap supports native -> token via a second Uniswap V3 factory", async () => {
+    const wNative = await viem.deployContract("MockWNative");
+    const token = await viem.deployContract("MockERC20", ["Mock", "MOCK", 18]);
+    const pancakeFactory = await viem.deployContract("MockV3Factory");
+    const uniFactory = await viem.deployContract("MockV3Factory");
+    const pool = await viem.deployContract("MockV3Pool", [wNative.address, token.address]);
+
+    await uniFactory.write.setPool([wNative.address, token.address, 500, pool.address]);
+
+    await token.write.mint([pool.address, 1_000_000n * 10n ** 18n]);
+
+    const router = await deployRouter();
+    await router.write.initialize([owner.account.address, wNative.address, pancakeFactory.address]);
+    await router.write.setUniswapV3Factory([uniFactory.address]);
+
+    const amountIn = 1n * 10n ** 18n;
+    const deadline = BigInt((await publicClient.getBlock()).timestamp + 60n);
+    const userTokenBefore = await token.read.balanceOf([user.account.address]);
+
+    const descs = [
+      {
+        swapType: 1,
+        tokenIn: ZERO,
+        tokenOut: token.address,
+        poolAddress: pool.address,
+        fee: 500,
+        tickSpacing: 0,
+        hooks: ZERO,
+        hookData: "0x",
+        poolManager: uniFactory.address,
+        parameters: ZERO32,
+        data: "0x",
+      },
+    ] as const;
+    await router.write.swap([descs, ZERO, amountIn, amountIn, deadline], { account: user.account, value: amountIn });
+
+    const userTokenAfter = await token.read.balanceOf([user.account.address]);
+    assert.equal(userTokenAfter - userTokenBefore, amountIn);
+  });
+
   it("swap supports token -> native via V3 pool", async () => {
     const wNative = await viem.deployContract("MockWNative");
     const token = await viem.deployContract("MockERC20", ["Mock", "MOCK", 18]);

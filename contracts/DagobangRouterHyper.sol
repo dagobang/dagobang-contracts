@@ -323,8 +323,9 @@ contract DagobangRouterHyper is Initializable, OwnableUpgradeable, PausableUpgra
     require(amount0Delta > 0 || amount1Delta > 0, "ND");
     address vf = v3Factory;
     require(vf != address(0), "V3_NC");
-    (address tokenIn, address tokenOut, uint24 fee, address payer) = abi.decode(data, (address, address, uint24, address));
-    address pool = IUniswapV3Factory(vf).getPool(tokenIn, tokenOut, fee);
+    (address tokenIn, address tokenOut, uint24 fee, address payer, address factory) = abi.decode(data, (address, address, uint24, address, address));
+    require(factory == vf, "UF");
+    address pool = IUniswapV3Factory(factory).getPool(tokenIn, tokenOut, fee);
     require(msg.sender == pool, "IP");
 
     address token0 = IUniswapV3Pool(pool).token0();

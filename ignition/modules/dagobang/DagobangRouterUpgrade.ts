@@ -19,16 +19,29 @@ const DagobangRouterUpgradeModule = buildModule("DagobangRouterUpgradeModule", (
   const proxyAddress = args.proxyAddress;
   const upgradeCallData = args.upgradeCallData;
   const flapPortal = m.getParameter("flapPortal", routerArgs.flapPortal ?? zeroAddress);
+  const uniswapV3Factory = m.getParameter(
+    "uniswapV3Factory",
+    routerArgs.uniswapV3Factory ?? zeroAddress,
+  );
   const admin = m.getAccount(1);
 
   const routerProxy = m.contractAt("DagobangProxy", proxyAddress, { id: "DagobangRouterProxy" });
   const router = m.contractAt("DagobangRouter", proxyAddress, { id: "DagobangRouterProxyAsRouter" });
+  // Keep already-sent V21 libs (Flap/FourMeme/Luna/Likwid) without extra `after`
+  // so Ignition reconciliation stays compatible. Chain only the remaining deployer
+  // txs: EIP-7702 delegated accounts allow 1 in-flight tx.
   const flapSwapLib = m.library("FlapSwapLib", { id: `FlapSwapLib_${releaseTagId}` });
   const fourMemeSwapLib = m.library("FourMemeSwapLib", { id: `FourMemeSwapLib_${releaseTagId}` });
   const lunaSwapLib = m.library("LunaSwapLib", { id: `LunaSwapLib_${releaseTagId}` });
-  const printrSwapLib = m.library("PrintrSwapLib", { id: `PrintrSwapLib_${releaseTagId}` });
-  const openFourSwapLib = m.library("OpenFourSwapLib", { id: `OpenFourSwapLib_${releaseTagId}` });
   const likwidSwapLib = m.library("LikwidSwapLib", { id: `LikwidSwapLib_${releaseTagId}` });
+  const openFourSwapLib = m.library("OpenFourSwapLib", {
+    id: `OpenFourSwapLib_${releaseTagId}`,
+    after: [lunaSwapLib],
+  });
+  const printrSwapLib = m.library("PrintrSwapLib", {
+    id: `PrintrSwapLib_${releaseTagId}`,
+    after: [openFourSwapLib],
+  });
   const routerImplementation = m.contract("DagobangRouter", [], {
     id: `DagobangRouter_${releaseTagId}`,
     libraries: {
@@ -41,15 +54,24 @@ const DagobangRouterUpgradeModule = buildModule("DagobangRouterUpgradeModule", (
     },
   });
 
-  m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {
+  const upgradeToAndCall = m.call(routerProxy, "upgradeToAndCall", [routerImplementation, upgradeCallData], {
     after: [routerImplementation],
     from: admin,
     id: `DagobangRouterProxy_upgradeToAndCall_${releaseTagId}`,
   });
-  m.call(router, "setFlapPortal", [flapPortal], {
+  const setFlapPortal = m.call(router, "setFlapPortal", [flapPortal], {
     after: [routerImplementation],
     from: ownerAccount,
     id: `DagobangRouter_setFlapPortal_${releaseTagId}`,
+  });
+  const setUniswapV3FactoryData = m.encodeFunctionCall(
+    routerImplementation,
+    "setUniswapV3Factory",
+    [uniswapV3Factory],
+  );
+  m.send(`DagobangRouter_setUniswapV3Factory_${releaseTagId}`, proxyAddress, 0n, setUniswapV3FactoryData, {
+    after: [upgradeToAndCall, setFlapPortal],
+    from: ownerAccount,
   });
 
   return {
